@@ -175,3 +175,95 @@ def conductance_matrix_READ(n, rline, rcell, rpu, vWLsel, vBLsel,
                         mat[p][p - nsq] = c
 
     return mat, iin
+
+
+def conductance_matrix_CAMREAD(n, rline, rcell, vWLsel, vBL0, vBL1,
+                               isel=0, jpattern=None, verbose=True):
+    """
+    Calculates the conductance matrix and the vector of supply currents for a
+    CAM READ event i.e. selected word (match) line has an applied voltage and
+    others are floating, and all bit lines have an applied voltage
+        n x n matrix
+        power supplied on 0-index side of array (single side supply)
+        word line node listed followed by bit line nodes
+        no pull up resistor (equal to line resistance on power line side)
+        can apply any pattern to bit lines (bool array of length n)
+    """
+
+    # Set bit line pattern to all zeros if not specified
+    if not jpattern:
+        jpattern = np.zeros(n, dtype=bool)
+
+    # Conductance coefficients
+    a2 = 1.0 / rcell + 2.0 / rline
+    a1 = 1.0 / rcell + 1.0 / rline
+    b = -1.0 / rline
+    c = -1.0 / rcell
+    dWLsel = vWLsel / rline
+    dBL0 = vBL0 / rline
+    dBL1 = vBL1 / rline
+
+    # Setup empty conductance matrix and current vector
+    nsq = n * n
+    mat = np.zeros((2 * nsq, 2 * nsq))
+    iin = np.zeros(2 * nsq)
+
+    # Loop for word line nodes (W) and bit line nodes (B)
+    for l in ['W', 'B']:
+        # Loop for all word lines (i)
+        for i in xrange(n):
+            # Loop for all bit lines (j)
+            for j in xrange(n):
+                if l is 'W':
+                    p = n*i + j
+                    if verbose:
+                        print l, i, j, p
+                    if j == 0:           # i.e. power line side
+                        if i is isel:
+                            mat[p][p] = a3
+                            mat[p][p + 1] = b
+                            mat[p][p + nsq] = c
+                            iin[p] = dWLsel
+                        else:
+                            mat[p][p] = a1
+                            mat[p][p + 1] = b
+                            mat[p][p + nsq] = c
+
+                    elif j == (n - 1):   # i.e. floating side
+                        mat[p][p] = a1
+                        mat[p][p - 1] = b
+                        mat[p][p + nsq] = c
+
+                    else:                # i.e. middle of array
+                        mat[p][p] = a2
+                        mat[p][p - 1] = b
+                        mat[p][p + 1] = b
+                        mat[p][p + nsq] = c
+
+                else:
+                    p = n*i + j + nsq
+                    if verbose:
+                        print l, i, j, p
+                    if i == 0:           # i.e. power line side
+                        if j is jsel:
+                            mat[p][p] = a3
+                            mat[p][p + n] = b
+                            mat[p][p - nsq] = c
+                            iin[p] = dBLsel
+                        else:
+                            mat[p][p] = a1
+                            mat[p][p + n] = b
+                            mat[p][p - nsq] = c
+
+                    elif i == (n - 1):   # i.e. floating side
+                        mat[p][p] = a1
+                        mat[p][p - n] = b
+                        mat[p][p - nsq] = c
+
+                    else:                # i.e. middle of array
+                        mat[p][p] = a2
+                        mat[p][p - n] = b
+                        mat[p][p + n] = b
+                        mat[p][p - nsq] = c
+
+    return mat, iin

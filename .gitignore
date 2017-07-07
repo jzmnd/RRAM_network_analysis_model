@@ -25,6 +25,7 @@ wheels/
 .installed.cfg
 *.egg
 .ipynb_checkpoints/
+figures/
 
 # DS Store
 .DS_Store
