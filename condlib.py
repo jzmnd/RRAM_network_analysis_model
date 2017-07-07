@@ -29,8 +29,10 @@ def conductance_matrix_WRITE(n, rline, rcell, vWLsel, vWLnsel, vBLsel, vBLnsel,
     a1 = 1.0 / rcell + 1.0 / rline
     b = -1.0 / rline
     c = -1.0 / rcell
-    ds = vWLsel / rline
-    dn = vWLnsel / rline
+    dWLsel = vWLsel / rline
+    dWLnsel = vWLnsel / rline
+    dBLsel = vBLsel / rline
+    dBLnsel = vBLnsel / rline
 
     # Setup empty conductance matrix and current vector
     nsq = n * n
@@ -51,7 +53,7 @@ def conductance_matrix_WRITE(n, rline, rcell, vWLsel, vWLnsel, vBLsel, vBLnsel,
                         mat[p][p] = a2
                         mat[p][p + 1] = b
                         mat[p][p + nsq] = c
-                        iin[p] = ds if i is isel else dn
+                        iin[p] = dWLsel if i is isel else dWLnsel
 
                     elif j == (n - 1):   # i.e. floating side
                         mat[p][p] = a1
@@ -72,7 +74,7 @@ def conductance_matrix_WRITE(n, rline, rcell, vWLsel, vWLnsel, vBLsel, vBLnsel,
                         mat[p][p] = a2
                         mat[p][p + n] = b
                         mat[p][p - nsq] = c
-                        iin[p] = ds if j is jsel else dn
+                        iin[p] = dBLsel if j is jsel else dBLnsel
 
                     elif i == (n - 1):   # i.e. floating side
                         mat[p][p] = a1
@@ -106,7 +108,8 @@ def conductance_matrix_READ(n, rline, rcell, rpu, vWLsel, vBLsel,
     a3 = 1.0 / rcell + 1.0 / rline + 1.0 / rpu
     b = -1.0 / rline
     c = -1.0 / rcell
-    ds = vWLsel / rpu
+    dWLsel = vWLsel / rpu
+    dBLsel = vBLsel / rpu
 
     # Setup empty conductance matrix and current vector
     nsq = n * n
@@ -128,7 +131,7 @@ def conductance_matrix_READ(n, rline, rcell, rpu, vWLsel, vBLsel,
                             mat[p][p] = a3
                             mat[p][p + 1] = b
                             mat[p][p + nsq] = c
-                            iin[p] = ds
+                            iin[p] = dWLsel
                         else:
                             mat[p][p] = a1
                             mat[p][p + 1] = b
@@ -154,7 +157,7 @@ def conductance_matrix_READ(n, rline, rcell, rpu, vWLsel, vBLsel,
                             mat[p][p] = a3
                             mat[p][p + n] = b
                             mat[p][p - nsq] = c
-                            iin[p] = ds
+                            iin[p] = dBLsel
                         else:
                             mat[p][p] = a1
                             mat[p][p + n] = b
